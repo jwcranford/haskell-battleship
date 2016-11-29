@@ -38,12 +38,12 @@ placeShipRandomly bnds size =
 placeStandardShipsRandomly :: IO [Ship]
 placeStandardShipsRandomly = sequence $ map (placeShipRandomly (10,10)) [2, 3, 3, 4, 5]
 
-data Cell = Vacant Bool | Occupied Ship Bool deriving Show
+data Cell = Vacant (Maybe Bool) | Occupied Ship Bool deriving Show
 
 data Board = Board { board :: Array (Int,Int) Cell
                     , shipTotal :: Int
                     , shipsSunk :: Int
-                    , ships :: [Ship] } 
+                    , ships :: [Ship] } deriving Show
 
 -- instance Show Board where
     -- TODO implement show
@@ -56,7 +56,7 @@ createStandardBoard :: [Ship] -> Board
 createStandardBoard [] = Board (array ((0,0),(0,0)) []) 0 0 []
 createStandardBoard ss = 
     let assoc = [(cs, Occupied ship False) | ship <- ss, cs <- coords ship]
-    in Board { board = (accumArray (\_ a -> a) (Vacant False) ((1,1), (10,10)) assoc),
+    in Board { board = (accumArray (\_ a -> a) (Vacant Nothing) ((1,1), (10,10)) assoc),
                shipTotal = length ss,
                shipsSunk = 0,
                ships = ss }
