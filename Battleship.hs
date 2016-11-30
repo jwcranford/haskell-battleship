@@ -1,6 +1,6 @@
 -- Battleship game
 
-import Data.Ix (range)
+import Data.Ix 
 import System.Random
 import Data.Array
 
@@ -50,14 +50,22 @@ instance Show Cell where
 data Board = Board { board :: Array (Int,Int) Cell
                     , shipTotal :: Int
                     , shipsSunk :: Int
-                    , ships :: [Ship] } deriving Show
+                    , ships :: [Ship] } 
+
+                    
+-- takes a row index and the bounds of an 2-dimensional array and returns all the 
+-- indices for the given row
+rowIndices2D :: Int -> ((Int,Int),(Int,Int)) -> [(Int,Int)]
+rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))                    
+            
+-- shows the given row of the array             
+showRow :: (Show a) => Int -> Array (Int, Int) a -> String
+showRow row a = 
+    let coords = rowIndices2D row (bounds a)
+    in foldl (\s i -> s ++ ' ':(show (a!i))) "" coords            
 
 -- instance Show Board where
-    -- TODO implement show
-    -- . . x . . - hit
-    -- . . o . . - miss
-    -- . . X . . - hit ship
-    -- . . O . . - non-hit ship
+--    showPrec i b = 
 
 createStandardBoard :: [Ship] -> Board
 createStandardBoard [] = Board (array ((0,0),(0,0)) []) 0 0 []
