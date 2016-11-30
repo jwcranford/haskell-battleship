@@ -59,13 +59,16 @@ rowIndices2D :: Int -> ((Int,Int),(Int,Int)) -> [(Int,Int)]
 rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))                    
             
 -- shows the given row of the array             
-showRow :: (Show a) => Int -> Array (Int, Int) a -> String
-showRow row a = 
+showsRowPrec :: (Show a) => Int -> Int -> Array (Int, Int) a -> ShowS
+showsRowPrec prec row a = 
     let coords = rowIndices2D row (bounds a)
-    in foldl (\s i -> s ++ ' ':(show (a!i))) "" coords            
+    in \s -> foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s coords
 
--- instance Show Board where
---    showPrec i b = 
+instance Show Board where
+    showsPrec p b = 
+        let a = board b
+            ((minx,_),(maxx,_)) = bounds a
+        in \so -> foldr (\row s -> showsRowPrec p row a ('\n':s)) so [minx..maxx]
 
 createStandardBoard :: [Ship] -> Board
 createStandardBoard [] = Board (array ((0,0),(0,0)) []) 0 0 []
