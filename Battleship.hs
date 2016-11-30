@@ -38,8 +38,15 @@ placeShipRandomly bnds size =
 placeStandardShipsRandomly :: IO [Ship]
 placeStandardShipsRandomly = sequence $ map (placeShipRandomly (10,10)) [2, 3, 3, 4, 5]
 
-data Cell = Vacant (Maybe Bool) | Occupied Ship Bool deriving Show
+data Cell = Vacant (Maybe Bool) | Occupied Ship Bool 
 
+instance Show Cell where
+    show (Vacant Nothing)      = "."
+    show (Vacant (Just True))  = "x"
+    show (Vacant (Just False)) = "o"
+    show (Occupied _ True)     = "X"
+    show (Occupied _ False)    = "O"
+    
 data Board = Board { board :: Array (Int,Int) Cell
                     , shipTotal :: Int
                     , shipsSunk :: Int
