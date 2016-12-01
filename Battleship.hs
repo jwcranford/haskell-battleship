@@ -3,6 +3,7 @@
 import Data.Ix 
 import System.Random
 import Data.Array
+import Data.List
 
 data Ship = Ship { shipType:: Int, coords:: [(Int,Int)] } deriving Show
 
@@ -78,3 +79,9 @@ createStandardBoard ss =
                shipTotal = length ss,
                shipsSunk = 0,
                ships = ss }
+
+-- returns true if the given list of ships has any collisions, false otherwise
+collisionsExist :: [Ship] -> Bool
+collisionsExist ships = 
+    let collidingCoords = foldl1 intersect (map coords ships)
+    in not (null collidingCoords)
