@@ -1,9 +1,12 @@
 -- Battleship game
+module Battleship where
 
 import Data.Ix 
 import System.Random
 import Data.Array
 import Data.List
+import Data.Monoid
+import Control.Monad
 
 data Ship = Ship { shipType:: Int, coords:: [(Int,Int)] } deriving Show
 
@@ -19,27 +22,31 @@ orientationFromInt x = toEnum $ x `mod` 2
 randomOrientation :: IO Orientation
 randomOrientation = do i <- getStdRandom random; return $ orientationFromInt i
 
-randomPlacement :: Int -> (Int, Int) -> Orientation -> IO (Int,Int)
-randomPlacement size (maxx, maxy) Vertical = 
-    do x <- getStdRandom $ randomR (1, maxx)
-       y <- getStdRandom $ randomR (1, maxy - size + 1)
+standardBoardSize :: ((Int,Int),(Int,Int))
+standardBoardSize = ((1,1), (10,10))
+
+randomPlacement :: Int -> ((Int,Int),(Int,Int)) -> Orientation -> IO (Int,Int)
+randomPlacement size ((minx,miny),(maxx, maxy)) Vertical = 
+    do x <- getStdRandom $ randomR (minx, maxx)
+       y <- getStdRandom $ randomR (miny, maxy - size + 1)
        return (x,y)
-randomPlacement size (maxx, maxy) Horizontal = 
-    do x <- getStdRandom $ randomR (1, maxx - size + 1)
-       y <- getStdRandom $ randomR (1, maxy)
+randomPlacement size ((minx,miny),(maxx, maxy)) Horizontal = 
+    do x <- getStdRandom $ randomR (minx, maxx - size + 1)
+       y <- getStdRandom $ randomR (miny, maxy)
        return (x,y)
        
 -- places a ship of given size randomly on a grid of the given bounds
-placeShipRandomly :: (Int, Int) -> Int -> IO Ship
+placeShipRandomly :: ((Int,Int),(Int,Int)) -> Int -> IO Ship
 placeShipRandomly bnds size = 
     do ori <- randomOrientation
        p <- randomPlacement size bnds ori
        return $ createShip size ori p
 
 placeStandardShipsRandomly :: IO [Ship]
-placeStandardShipsRandomly = sequence $ map (placeShipRandomly (10,10)) [2, 3, 3, 4, 5]
+placeStandardShipsRandomly = 
+    sequence $ map (placeShipRandomly standardBoardSize) [2, 3, 3, 4, 5]
 
-data Cell = Vacant (Maybe Bool) | Occupied Ship Bool 
+data Cell = Vacant (Maybe Bool) | Occupied Ship Bool | Collision Ship Ship
 
 instance Show Cell where
     show (Vacant Nothing)      = "."
@@ -47,6 +54,24 @@ instance Show Cell where
     show (Vacant (Just False)) = "o"
     show (Occupied _ True)     = "X"
     show (Occupied _ False)    = "O"
+    show (Collision _ _)       = "*"
+
+-- Cells can be combined as long as at least one is Vacant
+instance Monoid Cell where
+    mempty = Vacant Nothing
+
+    mappend (Vacant ma) (Vacant mb) =
+        Vacant $ liftM2 (\a b -> or [a, b]) ma mb
+    mappend (Vacant _) occ@(Occupied _ _) = occ
+    mappend occ@(Occupied _ _) (Vacant _) = occ
+    mappend (Occupied s1 _) (Occupied s2 _) = Collision s1 s2
+    mappend c@(Collision _ _) _ = c
+    mappend _ c@(Collision _ _) = c
+
+-- simple predicate for whether a cell is a collision or not
+collision :: Cell -> Bool
+collision (Collision _ _) = True
+collision _ = False
     
 data Board = Board { board :: Array (Int,Int) Cell
                     , shipTotal :: Int
@@ -71,17 +96,27 @@ instance Show Board where
             ((minx,_),(maxx,_)) = bounds a
         in \so -> foldr (\row s -> showsRowPrec p row a ('\n':s)) so [minx..maxx]
 
-createStandardBoard :: [Ship] -> Board
-createStandardBoard [] = Board (array ((0,0),(0,0)) []) 0 0 []
-createStandardBoard ss = 
+        
+createBoard :: ((Int,Int),(Int,Int)) -> [Ship] -> Board
+createBoard _ [] = Board (array ((0,0),(0,0)) []) 0 0 []
+createBoard bounds ss = 
     let assoc = [(cs, Occupied ship False) | ship <- ss, cs <- coords ship]
-    in Board { board = (accumArray (\_ a -> a) (Vacant Nothing) ((1,1), (10,10)) assoc),
+    in Board { board = accumArray mappend mempty bounds assoc,
                shipTotal = length ss,
                shipsSunk = 0,
                ships = ss }
 
--- returns true if the given list of ships has any collisions, false otherwise
-collisionsExist :: [Ship] -> Bool
-collisionsExist ships = 
-    let collidingCoords = foldl1 intersect (map coords ships)
-    in not (null collidingCoords)
+createStandardBoard :: [Ship] -> Board
+createStandardBoard = createBoard standardBoardSize
+
+-- returns all colliding cells from the board
+collisions :: Board -> [Cell]
+collisions (Board b _ _ _) = filter collision (elems b)
+
+createStandardRandomBoard :: IO Board
+createStandardRandomBoard = 
+    do ships <- placeStandardShipsRandomly
+       return $ createStandardBoard ships
+
+-- createValidBoard - repeats if collisions
+-- createValidBoard :: [Ship]
