@@ -8,7 +8,7 @@ import Data.List
 import Data.Monoid
 import Control.Monad
 
-data Ship = Ship { shipType:: Int, coords:: [(Int,Int)] } deriving Show
+data Ship = Ship { shipType:: Int, coords:: [(Int,Int)] } deriving (Show, Eq)
 
 data Orientation = Vertical | Horizontal deriving (Enum, Show)
 
@@ -46,7 +46,10 @@ placeStandardShipsRandomly :: IO [Ship]
 placeStandardShipsRandomly = 
     sequence $ map (placeShipRandomly standardBoardSize) [2, 3, 3, 4, 5]
 
-data Cell = Vacant (Maybe Bool) | Occupied Ship Bool | Collision Ship Ship
+data Cell = Vacant (Maybe Bool) 
+        | Occupied Ship Bool 
+        | Collision Ship Ship
+        deriving Eq
 
 instance Show Cell where
     show (Vacant Nothing)      = "."
@@ -118,5 +121,11 @@ createStandardRandomBoard =
     do ships <- placeStandardShipsRandomly
        return $ createStandardBoard ships
 
--- createValidBoard - repeats if collisions
--- createValidBoard :: [Ship]
+-- createValidStandardRandomBoard - repeats if collisions
+createValidStandardRandomBoard :: IO Board
+createValidStandardRandomBoard =
+    do { ships <- placeStandardShipsRandomly;
+           let b = createStandardBoard ships
+           in if null $ collisions b
+              then return b
+              else createValidStandardRandomBoard }
