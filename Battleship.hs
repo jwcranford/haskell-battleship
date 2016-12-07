@@ -54,10 +54,10 @@ data Cell = Vacant (Maybe Bool)
 instance Show Cell where
     show (Vacant Nothing)      = "."
     show (Vacant (Just True))  = "x"
-    show (Vacant (Just False)) = "o"
+    show (Vacant (Just False)) = "*"
     show (Occupied _ True)     = "X"
     show (Occupied _ False)    = "O"
-    show (Collision _ _)       = "*"
+    show (Collision _ _)       = "#"
 
 -- Cells can be combined as long as at least one is Vacant
 instance Monoid Cell where
@@ -101,13 +101,15 @@ instance Show Board where
 
         
 createBoard :: ((Int,Int),(Int,Int)) -> [Ship] -> Board
-createBoard _ [] = Board (array ((0,0),(0,0)) []) 0 0 []
 createBoard bounds ss = 
     let assoc = [(cs, Occupied ship False) | ship <- ss, cs <- coords ship]
     in Board { board = accumArray mappend mempty bounds assoc,
                shipTotal = length ss,
                shipsSunk = 0,
                ships = ss }
+
+emptyBoard bounds numShips = 
+  (createBoard bounds []) { shipTotal = numShips }
 
 createStandardBoard :: [Ship] -> Board
 createStandardBoard = createBoard standardBoardSize
@@ -129,3 +131,35 @@ createValidStandardRandomBoard =
            in if null $ collisions b
               then return b
               else createValidStandardRandomBoard }
+
+
+mapCell :: Ix i => i -> (a -> a) -> Array i a -> Array i a
+mapCell i f a = a // [(i, f (a ! i))]
+
+sunk :: Ship -> Board -> Bool
+sunk s (Board a _ _ _) =
+	let cells = map (a !) $ coords s
+	    hit (Occupied _ b) = b
+	    statii = map hit cells
+	in and statii
+
+shoot :: (Int, Int) -> Board -> (Bool,Board)
+shoot cs b@(Board a total shipsSunk ships) =
+  case a ! cs of
+  (Vacant _) -> 
+    let a' = a // [(cs,Vacant $ Just False)]
+    in (False, b { board = a'})
+  (Occupied _ True) -> (True, b)
+  (Occupied ship False) -> 
+    let a' = a // [(cs, Occupied ship True)]
+    in if sunk ship b
+       then (True, Board a' total (shipsSunk + 1) ships)
+       else (True, Board a' total shipsSunk ships)
+
+
+-- apply this to a vacant board
+applyShotResults :: ((Int,Int),Bool) -> Int -> Board -> Board
+applyShotResults (cs,hit) shipsSunk (Board a t _ []) =
+  let a' = a // [(cs,Vacant $ Just hit)]
+  in Board a' t shipsSunk []
+
