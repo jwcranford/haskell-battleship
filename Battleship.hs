@@ -129,3 +129,14 @@ createValidStandardRandomBoard =
            in if null $ collisions b
               then return b
               else createValidStandardRandomBoard }
+
+
+-- registers a miss at the given location
+miss :: Board -> (Int,Int)-> Board
+miss b cs = 
+	let a = board b
+	in b { board = a // [(cs,Vacant $ Just False)] }
+
+-- registers a hit at the given location
+-- hit :: Board -> (Int,Int) -> Board
+-- hit b cs = let 
