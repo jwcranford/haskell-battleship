@@ -163,3 +163,38 @@ applyShotResults (cs,hit) shipsSunk (Board a t _ []) =
   let a' = a // [(cs,Vacant $ Just hit)]
   in Board a' t shipsSunk []
 
+readCoord :: String -> (Int,Int)
+-- readCoord s = read ('(' : s ++ ")")
+readCoord = read
+
+oneSolitaireMove :: (Board,Board) -> IO (Board,Board)
+oneSolitaireMove (realB,shadB) =
+  do { putStrLn $ show (realB,shadB);
+       putStr "Move? ";
+       cs <- fmap readCoord getLine;
+       let { (hit,realB') = shoot cs realB;
+             shadB' = applyShotResults (cs,hit) (shipsSunk realB') shadB }
+       in return (realB', shadB') }
+	
+gameOver :: Board -> Bool
+gameOver (Board _ tot sunk _) = tot == sunk
+
+solitaireLoop :: (Board,Board) -> IO (Board,Board)
+solitaireLoop args@(_,sb) =
+  if gameOver sb
+  then putStrLn "game over!" >> return args
+  else oneSolitaireMove args 
+       >>= solitaireLoop
+  
+mapf fx f = fmap f fx
+
+firstSolMove rb =
+  let shadB = emptyBoard standardBoardSize 5
+  in oneSolitaireMove (rb,shadB)
+
+
+solitaire = 
+  createValidStandardRandomBoard 
+  >>= firstSolMove
+  >>= solitaireLoop
+         
