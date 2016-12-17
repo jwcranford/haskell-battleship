@@ -8,13 +8,13 @@ import Data.List
 import Data.Monoid
 import Control.Monad
 
-data Ship = Ship { shipType:: Int, coords:: [(Int,Int)] } deriving (Show, Eq)
+data Ship = Ship { shipType:: String, numHits:: Int, coords:: [(Int,Int)] } deriving (Show, Eq)
 
 data Orientation = Vertical | Horizontal deriving (Enum, Show)
 
-createShip :: Int -> Orientation -> (Int,Int) -> Ship
-createShip size Vertical begin@(x,y)   = Ship size $ range (begin, (x,y+size-1))
-createShip size Horizontal begin@(x,y) = Ship size $ range (begin, (x+size-1,y))
+createShip :: String -> Int -> Orientation -> (Int,Int) -> Ship
+createShip name size Vertical begin@(x,y)   = Ship name size $ range (begin, (x,y+size-1))
+createShip name size Horizontal begin@(x,y) = Ship name size $ range (begin, (x+size-1,y))
 
 orientationFromInt :: Int -> Orientation
 orientationFromInt x = toEnum $ x `mod` 2
@@ -36,15 +36,15 @@ randomPlacement size ((minx,miny),(maxx, maxy)) Horizontal =
        return (x,y)
        
 -- places a ship of given size randomly on a grid of the given bounds
-placeShipRandomly :: ((Int,Int),(Int,Int)) -> Int -> IO Ship
-placeShipRandomly bnds size = 
+placeShipRandomly :: ((Int,Int),(Int,Int)) -> (String, Int) -> IO Ship
+placeShipRandomly bnds (name, size) = 
     do ori <- randomOrientation
        p <- randomPlacement size bnds ori
-       return $ createShip size ori p
+       return $ createShip name size ori p
 
 placeStandardShipsRandomly :: IO [Ship]
 placeStandardShipsRandomly = 
-    sequence $ map (placeShipRandomly standardBoardSize) [2, 3, 3, 4, 5]
+    sequence $ map (placeShipRandomly standardBoardSize) [("Destroyer",2), ("Cruiser",3), ("Submarine",3), ("Battleship",4), ("Carrier",5)]
 
 data Cell = Vacant (Maybe Bool) 
         | Occupied Ship Bool 
