@@ -97,7 +97,10 @@ instance Show Board where
     showsPrec p b = 
         let a = board b
             ((minx,_),(maxx,_)) = bounds a
-        in \so -> foldr (\row s -> showsRowPrec p row a ('\n':s)) so [minx..maxx]
+            ssunk = shipsSunk b
+        in \so -> 
+          let tl = shows ssunk (" ships sunk\n" ++ so)
+          in foldr (\row s -> showsRowPrec p row a ('\n':s)) tl [minx..maxx]
 
         
 createBoard :: ((Int,Int),(Int,Int)) -> [Ship] -> Board
@@ -136,8 +139,7 @@ createValidStandardRandomBoard =
 mapCell :: Ix i => i -> (a -> a) -> Array i a -> Array i a
 mapCell i f a = a // [(i, f (a ! i))]
 
-sunk :: Ship -> Board -> Bool
-sunk s (Board a _ _ _) =
+sunk s a =
 	let cells = map (a !) $ coords s
 	    hit (Occupied _ b) = b
 	    statii = map hit cells
@@ -152,7 +154,7 @@ shoot cs b@(Board a total shipsSunk ships) =
   (Occupied _ True) -> (True, b)
   (Occupied ship False) -> 
     let a' = a // [(cs, Occupied ship True)]
-    in if sunk ship b
+    in if sunk ship a'
        then (True, Board a' total (shipsSunk + 1) ships)
        else (True, Board a' total shipsSunk ships)
 
