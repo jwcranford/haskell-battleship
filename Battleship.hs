@@ -8,11 +8,12 @@ import Data.List
 import Data.Monoid
 import Control.Monad
 
-data Ship = Ship { shipType:: String, numHits:: Int, coords:: [(Int,Int)] } deriving (Show, Eq)
+type BoardIx = (Int,Int)
+data Ship = Ship { shipType:: String, numHits:: Int, coords:: [BoardIx] } deriving (Show, Eq)
 
 data Orientation = Vertical | Horizontal deriving (Enum, Show)
 
-createShip :: String -> Int -> Orientation -> (Int,Int) -> Ship
+createShip :: String -> Int -> Orientation -> BoardIx -> Ship
 createShip name size Vertical begin@(x,y)   = Ship name size $ range (begin, (x,y+size-1))
 createShip name size Horizontal begin@(x,y) = Ship name size $ range (begin, (x+size-1,y))
 
@@ -22,10 +23,10 @@ orientationFromInt x = toEnum $ x `mod` 2
 randomOrientation :: IO Orientation
 randomOrientation = do i <- getStdRandom random; return $ orientationFromInt i
 
-standardBoardSize :: ((Int,Int),(Int,Int))
+standardBoardSize :: (BoardIx,BoardIx)
 standardBoardSize = ((1,1), (10,10))
 
-randomPlacement :: Int -> ((Int,Int),(Int,Int)) -> Orientation -> IO (Int,Int)
+randomPlacement :: Int -> (BoardIx,BoardIx) -> Orientation -> IO BoardIx
 randomPlacement size ((minx,miny),(maxx, maxy)) Vertical = 
     do x <- getStdRandom $ randomR (minx, maxx)
        y <- getStdRandom $ randomR (miny, maxy - size + 1)
@@ -36,7 +37,7 @@ randomPlacement size ((minx,miny),(maxx, maxy)) Horizontal =
        return (x,y)
        
 -- places a ship of given size randomly on a grid of the given bounds
-placeShipRandomly :: ((Int,Int),(Int,Int)) -> (String, Int) -> IO Ship
+placeShipRandomly :: (BoardIx,BoardIx) -> (String, Int) -> IO Ship
 placeShipRandomly bnds (name, size) = 
     do ori <- randomOrientation
        p <- randomPlacement size bnds ori
@@ -76,7 +77,7 @@ collision :: Cell -> Bool
 collision (Collision _ _) = True
 collision _ = False
     
-data Board = Board { board :: Array (Int,Int) Cell
+data Board = Board { board :: Array BoardIx Cell
                     , shipTotal :: Int
                     , shipsSunk :: Int
                     , ships :: [Ship] } 
@@ -84,11 +85,11 @@ data Board = Board { board :: Array (Int,Int) Cell
                     
 -- takes a row index and the bounds of an 2-dimensional array and returns all the 
 -- indices for the given row
-rowIndices2D :: Int -> ((Int,Int),(Int,Int)) -> [(Int,Int)]
+rowIndices2D :: Int -> (BoardIx,BoardIx) -> [BoardIx]
 rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))                    
             
--- shows the given row of the array             
-showsRowPrec :: (Show a) => Int -> Int -> Array (Int, Int) a -> ShowS
+-- shows the given row of the array 
+showsRowPrec :: (Show a) => Int -> Int -> Array BoardIx a -> ShowS
 showsRowPrec prec row a = 
     let coords = rowIndices2D row (bounds a)
     in \s -> foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s coords
@@ -103,7 +104,7 @@ instance Show Board where
           in foldr (\row s -> showsRowPrec p row a ('\n':s)) tl [minx..maxx]
 
         
-createBoard :: ((Int,Int),(Int,Int)) -> [Ship] -> Board
+createBoard :: (BoardIx,BoardIx) -> [Ship] -> Board
 createBoard bounds ss = 
     let assoc = [(cs, Occupied ship False) | ship <- ss, cs <- coords ship]
     in Board { board = accumArray mappend mempty bounds assoc,
@@ -145,7 +146,7 @@ sunk s a =
 	    statii = map hit cells
 	in and statii
 
-shoot :: (Int, Int) -> Board -> (Bool,Board)
+shoot ::  BoardIx -> Board -> (Bool,Board)
 shoot cs b@(Board a total shipsSunk ships) =
   case a ! cs of
   (Vacant _) -> 
@@ -160,13 +161,12 @@ shoot cs b@(Board a total shipsSunk ships) =
 
 
 -- apply this to a vacant board
-applyShotResults :: ((Int,Int),Bool) -> Int -> Board -> Board
+applyShotResults :: (BoardIx,Bool) -> Int -> Board -> Board
 applyShotResults (cs,hit) shipsSunk (Board a t _ []) =
   let a' = a // [(cs,Vacant $ Just hit)]
   in Board a' t shipsSunk []
 
-readCoord :: String -> (Int,Int)
--- readCoord s = read ('(' : s ++ ")")
+readCoord :: String -> BoardIx
 readCoord = read
 
 oneSolitaireMove :: (Board,Board) -> IO (Board,Board)
@@ -188,7 +188,10 @@ solitaireLoop args@(_,sb) =
   else oneSolitaireMove args 
        >>= solitaireLoop
   
-mapf fx f = fmap f fx
+-- fmap with args reversed. <&> has the same relationship to <$> as & has to $  
+infixl 5 <&>
+(<&>) :: (Functor f) => f a -> (a -> b) -> f b
+(<&>) = flip fmap
 
 firstSolMove rb =
   let shadB = emptyBoard standardBoardSize 5
