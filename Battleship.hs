@@ -9,13 +9,18 @@ import Data.Monoid
 import Control.Monad
 
 type BoardIx = (Int,Int)
+
 data Ship = Ship { shipType:: String, numHits:: Int, coords:: [BoardIx] } deriving (Show, Eq)
 
-data Orientation = Vertical | Horizontal deriving (Enum, Show)
+data Orientation = Vert | Horiz deriving (Enum, Show)
 
 createShip :: String -> Int -> Orientation -> BoardIx -> Ship
-createShip name size Vertical begin@(x,y)   = Ship name size $ range (begin, (x,y+size-1))
-createShip name size Horizontal begin@(x,y) = Ship name size $ range (begin, (x+size-1,y))
+createShip name size Horiz begin@(x,y) =
+  let y' = toEnum $ (fromEnum y) + size - 1
+  in Ship name size $ range (begin, (x,y'))
+createShip name size Vert begin@(x,y) = 
+  let x' = toEnum $ (fromEnum x) + size - 1
+  in Ship name size $ range (begin, (x',y))
 
 orientationFromInt :: Int -> Orientation
 orientationFromInt x = toEnum $ x `mod` 2
@@ -27,14 +32,16 @@ standardBoardSize :: (BoardIx,BoardIx)
 standardBoardSize = ((1,1), (10,10))
 
 randomPlacement :: Int -> (BoardIx,BoardIx) -> Orientation -> IO BoardIx
-randomPlacement size ((minx,miny),(maxx, maxy)) Vertical = 
-    do x <- getStdRandom $ randomR (minx, maxx)
-       y <- getStdRandom $ randomR (miny, maxy - size + 1)
-       return (x,y)
-randomPlacement size ((minx,miny),(maxx, maxy)) Horizontal = 
-    do x <- getStdRandom $ randomR (minx, maxx - size + 1)
-       y <- getStdRandom $ randomR (miny, maxy)
-       return (x,y)
+randomPlacement size ((minx,miny),(maxx, maxy)) Horiz = 
+  let maxy' = toEnum $ (fromEnum maxy) - size + 1
+  in do x <- getStdRandom $ randomR (minx, maxx)
+        y <- getStdRandom $ randomR (miny, maxy')
+        return (x,y)
+randomPlacement size ((minx,miny),(maxx, maxy)) Vert = 
+  let maxx' = toEnum $ (fromEnum maxx) - size + 1
+  in do x <- getStdRandom $ randomR (minx, maxx')
+        y <- getStdRandom $ randomR (miny, maxy)
+        return (x,y)
        
 -- places a ship of given size randomly on a grid of the given bounds
 placeShipRandomly :: (BoardIx,BoardIx) -> (String, Int) -> IO Ship
@@ -85,11 +92,11 @@ data Board = Board { board :: Array BoardIx Cell
                     
 -- takes a row index and the bounds of an 2-dimensional array and returns all the 
 -- indices for the given row
-rowIndices2D :: Int -> (BoardIx,BoardIx) -> [BoardIx]
+rowIndices2D :: (Ix a,Ix b) => a -> ((a,b),(a,b)) -> [(a,b)]
 rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))                    
             
 -- shows the given row of the array 
-showsRowPrec :: (Show a) => Int -> Int -> Array BoardIx a -> ShowS
+-- showsRowPrec :: (Show a) => Int -> Int -> Array BoardIx a -> ShowS
 showsRowPrec prec row a = 
     let coords = rowIndices2D row (bounds a)
     in \s -> foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s coords
@@ -130,11 +137,11 @@ createStandardRandomBoard =
 -- createValidStandardRandomBoard - repeats if collisions
 createValidStandardRandomBoard :: IO Board
 createValidStandardRandomBoard =
-    do { ships <- placeStandardShipsRandomly;
-           let b = createStandardBoard ships
-           in if null $ collisions b
-              then return b
-              else createValidStandardRandomBoard }
+    do ships <- placeStandardShipsRandomly;
+       let b = createStandardBoard ships
+       if null $ collisions b
+       then return b
+       else createValidStandardRandomBoard
 
 
 mapCell :: Ix i => i -> (a -> a) -> Array i a -> Array i a
