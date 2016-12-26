@@ -8,7 +8,7 @@ import Data.List
 import Data.Monoid
 import Control.Monad
 
-type BoardIx = (Int,Int)
+type BoardIx = (Char,Int)
 
 data Ship = Ship { shipType:: String, numHits:: Int, coords:: [BoardIx] } deriving (Show, Eq)
 
@@ -29,7 +29,7 @@ randomOrientation :: IO Orientation
 randomOrientation = do i <- getStdRandom random; return $ orientationFromInt i
 
 standardBoardSize :: (BoardIx,BoardIx)
-standardBoardSize = ((1,1), (10,10))
+standardBoardSize = (('a',0), ('j',9))
 
 randomPlacement :: Int -> (BoardIx,BoardIx) -> Orientation -> IO BoardIx
 randomPlacement size ((minx,miny),(maxx, maxy)) Horiz = 
