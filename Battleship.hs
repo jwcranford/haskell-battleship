@@ -173,17 +173,20 @@ applyShotResults (cs,hit) shipsSunk (Board a t _ []) =
   let a' = a // [(cs,Vacant $ Just hit)]
   in Board a' t shipsSunk []
 
-readCoord :: String -> BoardIx
-readCoord = read
+readCoord = reads
 
 oneSolitaireMove :: (Board,Board) -> IO (Board,Board)
 oneSolitaireMove (realB,shadB) =
-  do { putStrLn $ show (realB,shadB);
-       putStr "Move? ";
-       cs <- fmap readCoord getLine;
-       let { (hit,realB') = shoot cs realB;
-             shadB' = applyShotResults (cs,hit) (shipsSunk realB') shadB }
-       in return (realB', shadB') }
+  do putStrLn $ show realB -- ,shadB);
+     putStr "Move? ";
+     pcs <- fmap readCoord getLine;
+     case pcs of
+       ((cs,_):_) ->
+         let (hit,realB') = shoot cs realB;
+             shadB' = applyShotResults (cs,hit) (shipsSunk realB') shadB 
+         in return (realB', shadB') 
+       _ -> do putStrLn "input error";
+               oneSolitaireMove (realB,shadB)
 	
 gameOver :: Board -> Bool
 gameOver (Board _ tot sunk _) = tot == sunk
