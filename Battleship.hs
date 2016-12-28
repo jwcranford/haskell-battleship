@@ -8,7 +8,7 @@ import Data.List
 import Data.Monoid
 import Control.Monad
 
-type BoardIx = (Char,Int)
+type BoardIx = (Char,Char)
 
 data Ship = Ship { shipType:: String, numHits:: Int, coords:: [BoardIx] } deriving (Show, Eq)
 
@@ -29,7 +29,7 @@ randomOrientation :: IO Orientation
 randomOrientation = do i <- getStdRandom random; return $ orientationFromInt i
 
 standardBoardSize :: (BoardIx,BoardIx)
-standardBoardSize = (('a',0), ('j',9))
+standardBoardSize = (('a','0'), ('j','9'))
 
 randomPlacement :: Int -> (BoardIx,BoardIx) -> Orientation -> IO BoardIx
 randomPlacement size ((minx,miny),(maxx, maxy)) Horiz = 
@@ -173,15 +173,22 @@ applyShotResults (cs,hit) shipsSunk (Board a t _ []) =
   let a' = a // [(cs,Vacant $ Just hit)]
   in Board a' t shipsSunk []
 
-readCoord = reads
+-- readCoord :: Board -> String -> Maybe BoardIx 
+readCoord b (c:d:_) = 
+	if inRange b (c,d)
+	then Just (c,d)
+	else Nothing
+readCoord _ _ = Nothing
+		
 
 oneSolitaireMove :: (Board,Board) -> IO (Board,Board)
 oneSolitaireMove (realB,shadB) =
   do putStrLn $ show realB -- ,shadB);
      putStr "Move? ";
-     pcs <- fmap readCoord getLine;
-     case pcs of
-       ((cs,_):_) ->
+     let rdr = readCoord $ bounds $ board shadB
+     mcs <- fmap rdr getLine;
+     case mcs of
+       Just cs ->
          let (hit,realB') = shoot cs realB;
              shadB' = applyShotResults (cs,hit) (shipsSunk realB') shadB 
          in return (realB', shadB') 
