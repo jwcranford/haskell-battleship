@@ -96,10 +96,9 @@ rowIndices2D :: (Ix a,Ix b) => a -> ((a,b),(a,b)) -> [(a,b)]
 rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))                    
             
 -- shows the given row of the array 
--- showsRowPrec :: (Show a) => Int -> Int -> Array BoardIx a -> ShowS
 showsRowPrec prec row a = 
     let coords = rowIndices2D row (bounds a)
-    in \s -> foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s coords
+    in \s -> row : foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s coords
 
 instance Show Board where
     showsPrec p b = 
