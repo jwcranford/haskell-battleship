@@ -182,8 +182,8 @@ readCoord _ _ = Nothing
 
 oneSolitaireMove :: (Board,Board) -> IO (Board,Board)
 oneSolitaireMove (realB,shadB) =
-  do putStrLn $ show realB -- ,shadB);
-     putStr "Move? ";
+  do putStrLn $ show shadB
+     putStr "Move? "
      let rdr = readCoord $ bounds $ board shadB
      mcs <- fmap rdr getLine;
      case mcs of
@@ -197,10 +197,10 @@ oneSolitaireMove (realB,shadB) =
 gameOver :: Board -> Bool
 gameOver (Board _ tot sunk _) = tot == sunk
 
-solitaireLoop :: (Board,Board) -> IO (Board,Board)
+solitaireLoop :: (Board,Board) -> IO Board
 solitaireLoop args@(_,sb) =
   if gameOver sb
-  then putStrLn "game over!" >> return args
+  then putStrLn "game over!" >> return sb
   else oneSolitaireMove args 
        >>= solitaireLoop
   
@@ -218,4 +218,3 @@ solitaire =
   createValidStandardRandomBoard 
   >>= firstSolMove
   >>= solitaireLoop
-         
