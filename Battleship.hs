@@ -179,42 +179,12 @@ readCoord b (c:d:_) =
 	else Nothing
 readCoord _ _ = Nothing
 		
-
-oneSolitaireMove :: (Board,Board) -> IO (Board,Board)
-oneSolitaireMove (realB,shadB) =
-  do putStrLn $ show shadB
-     putStr "Move? "
-     let rdr = readCoord $ bounds $ board shadB
-     mcs <- fmap rdr getLine;
-     case mcs of
-       Just cs ->
-         let (hit,realB') = shoot cs realB;
-             shadB' = applyShotResults (cs,hit) (shipsSunk realB') shadB 
-         in return (realB', shadB') 
-       _ -> do putStrLn "input error";
-               oneSolitaireMove (realB,shadB)
 	
 gameOver :: Board -> Bool
 gameOver (Board _ tot sunk _) = tot == sunk
-
-solitaireLoop :: (Board,Board) -> IO Board
-solitaireLoop args@(_,sb) =
-  if gameOver sb
-  then putStrLn "game over!" >> return sb
-  else oneSolitaireMove args 
-       >>= solitaireLoop
   
 -- fmap with args reversed. <&> has the same relationship to <$> as & has to $  
 infixl 5 <&>
 (<&>) :: (Functor f) => f a -> (a -> b) -> f b
 (<&>) = flip fmap
 
-firstSolMove rb =
-  let shadB = emptyBoard standardBoardSize 5
-  in oneSolitaireMove (rb,shadB)
-
-
-solitaire = 
-  createValidStandardRandomBoard 
-  >>= firstSolMove
-  >>= solitaireLoop
