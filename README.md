@@ -1,7 +1,2 @@
 # haskell-battleship
-Learning project for Haskell - Battleship game
-
-## Dependencies
-``` 
-cabal install HUnit
-```
+A learning project in Haskell -  The classic game of battleship. 
