@@ -147,10 +147,10 @@ mapCell :: Ix i => i -> (a -> a) -> Array i a -> Array i a
 mapCell i f a = a // [(i, f (a ! i))]
 
 sunk s a =
-	let cells = map (a !) $ coords s
-	    hit (Occupied _ b) = b
-	    statii = map hit cells
-	in and statii
+  let cells = map (a !) $ coords s
+      hit (Occupied _ b) = b
+      statii = map hit cells
+  in and statii
 
 shoot ::  BoardIx -> Board -> (Bool,Board)
 shoot cs b@(Board a total shipsSunk ships) =
@@ -173,13 +173,12 @@ applyShotResults (cs,hit) shipsSunk (Board a t _ []) =
   in Board a' t shipsSunk []
 
 -- readCoord :: Board -> String -> Maybe BoardIx 
-readCoord b (c:d:_) = 
-	if inRange b (c,d)
-	then Just (c,d)
-	else Nothing
+readCoord b (c:d:_) = if inRange b (c,d)
+                      then Just (c,d)
+                      else Nothing
 readCoord _ _ = Nothing
-		
-	
+
+
 gameOver :: Board -> Bool
 gameOver (Board _ tot sunk _) = tot == sunk
   

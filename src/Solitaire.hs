@@ -1,4 +1,4 @@
-module Solitaire where
+module Main where
 
 import Battleship
 import Data.Array
