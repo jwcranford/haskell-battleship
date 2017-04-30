@@ -20,6 +20,5 @@ testCreateBoardNoCollisions =
 tests = test [ "createBoardWithCollisions" ~: testCreateBoardWithCollisions,
                 "noCollisions" ~: testCreateBoardNoCollisions]
 
-main = runTestTT tests 
-	>> return ()
+main = runTestTT tests >> return ()
 
