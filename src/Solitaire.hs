@@ -2,11 +2,13 @@ module Main where
 
 import Battleship
 import Data.Array
+import System.IO
 
 oneSolitaireMove :: (Board,Board) -> IO (Board,Board)
 oneSolitaireMove (realB,shadB) =
   do putStrLn $ show shadB
      putStr "Move? "
+     hFlush stdout
      let rdr = readCoord $ bounds $ board shadB
      mcs <- fmap rdr getLine;
      case mcs of
