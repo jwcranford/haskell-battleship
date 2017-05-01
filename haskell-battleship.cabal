@@ -17,12 +17,18 @@ executable hbattleship-solitaire
   hs-source-dirs:      src
   main-is:             Solitaire.hs
   default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5, random, array
+  build-depends:       base >= 4.7 && < 5, 
+                       random,
+                       array
   other-modules:       Battleship
 
-executable hbattleship-test
+Test-Suite hbattleship-test
+  type:                exitcode-stdio-1.0
   hs-source-dirs:      src
   main-is:             Battleship-test.hs
   default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5, HUnit, random, array
+  build-depends:       base >= 4.7 && < 5, 
+                       HUnit, 
+                       random, 
+                       array 
   other-modules:       Battleship
