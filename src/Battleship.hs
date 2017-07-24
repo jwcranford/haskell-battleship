@@ -1,12 +1,20 @@
 -- Battleship game
--- module Battleship (Board, ) where
-module Battleship where
+module Battleship (Board(..)
+  , Ship(..)
+  , Cell(..)
+  , shoot
+  , applyShotResults
+  , gameOver
+  , emptyBoard
+  , createBoard
+  , standardBoardSize
+  , createValidStandardRandomBoard
+  , collisions
+  ) where
 
 import Data.Ix 
 import System.Random
 import Data.Array
-import Data.List
-import Data.Monoid
 import Control.Monad
 
 type BoardIx = (Char,Char)
@@ -97,9 +105,11 @@ rowIndices2D :: (Ix a,Ix b) => a -> ((a,b),(a,b)) -> [(a,b)]
 rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))                    
             
 -- shows the given row of the array 
+showsRowPrec :: (Ix b, Show a) =>
+                      Int -> Char -> Array (Char, b) a -> String -> [Char]
 showsRowPrec prec row a = 
-    let coords = rowIndices2D row (bounds a)
-    in \s -> row : foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s coords
+    let cs = rowIndices2D row (bounds a)
+    in \s -> row : foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s cs
 
 instance Show Board where
     showsPrec p b = 
@@ -112,15 +122,16 @@ instance Show Board where
 
         
 createBoard :: (BoardIx,BoardIx) -> [Ship] -> Board
-createBoard bounds ss = 
+createBoard bs ss = 
     let assoc = [(cs, Occupied ship False) | ship <- ss, cs <- coords ship]
-    in Board { board = accumArray mappend mempty bounds assoc,
+    in Board { board = accumArray mappend mempty bs assoc,
                shipTotal = length ss,
                shipsSunk = 0,
                ships = ss }
 
-emptyBoard bounds numShips = 
-  (createBoard bounds []) { shipTotal = numShips }
+emptyBoard :: (BoardIx, BoardIx) -> Int -> Board
+emptyBoard bs numShips = 
+  (createBoard bs []) { shipTotal = numShips }
 
 createStandardBoard :: [Ship] -> Board
 createStandardBoard = createBoard standardBoardSize
@@ -129,32 +140,29 @@ createStandardBoard = createBoard standardBoardSize
 collisions :: Board -> [Cell]
 collisions (Board b _ _ _) = filter collision (elems b)
 
-createStandardRandomBoard :: IO Board
-createStandardRandomBoard = 
-    do ships <- placeStandardShipsRandomly
-       return $ createStandardBoard ships
-
 -- createValidStandardRandomBoard - repeats if collisions
 createValidStandardRandomBoard :: IO Board
 createValidStandardRandomBoard =
-    do ships <- placeStandardShipsRandomly;
-       let b = createStandardBoard ships
+    do shipsPlaced <- placeStandardShipsRandomly;
+       let b = createStandardBoard shipsPlaced
        if null $ collisions b
        then return b
        else createValidStandardRandomBoard
 
 
-mapCell :: Ix i => i -> (a -> a) -> Array i a -> Array i a
-mapCell i f a = a // [(i, f (a ! i))]
+-- mapCell :: Ix i => i -> (a -> a) -> Array i a -> Array i a
+-- mapCell i f a = a // [(i, f (a ! i))]
 
+sunk :: Ship -> Array BoardIx Cell -> Bool
 sunk s a =
   let cells = map (a !) $ coords s
-      hit (Occupied _ b) = b
       statii = map hit cells
   in and statii
+ where hit (Occupied _ b) = b 
+       hit _ = False
 
 shoot ::  BoardIx -> Board -> (Bool,Board)
-shoot cs b@(Board a total shipsSunk ships) =
+shoot cs b@(Board a total ssunk ss) =
   case a ! cs of
   (Vacant _) -> 
     let a' = a // [(cs,Vacant $ Just False)]
@@ -163,19 +171,20 @@ shoot cs b@(Board a total shipsSunk ships) =
   (Occupied ship False) -> 
     let a' = a // [(cs, Occupied ship True)]
     in if sunk ship a'
-       then (True, Board a' total (shipsSunk + 1) ships)
-       else (True, Board a' total shipsSunk ships)
+       then (True, Board a' total (ssunk + 1) ss)
+       else (True, Board a' total ssunk ss)
+  _ -> error (showString "Found a colliding cell in shoot: " $ show (a ! cs))
 
 
 -- apply this to a vacant board
 applyShotResults :: (BoardIx,Bool) -> Int -> Board -> Board
-applyShotResults (cs,hit) shipsSunk (Board a t _ []) =
+applyShotResults (cs,hit) ssunk (Board a t _ ss) =
   let a' = a // [(cs,Vacant $ Just hit)]
-  in Board a' t shipsSunk []
+  in Board a' t ssunk ss
 
 
 gameOver :: Board -> Bool
-gameOver (Board _ tot sunk _) = tot == sunk
+gameOver (Board _ tot ssunk _) = tot == ssunk
   
 -- fmap with args reversed. <&> has the same relationship to <$> as & has to $  
 -- infixl 5 <&>
