@@ -4,6 +4,12 @@ import Battleship
 import Data.Array
 import System.IO
 
+readCoord b (c:d:_) = if inRange b (c,d)
+                      then Just (c,d)
+                      else Nothing
+readCoord _ _ = Nothing
+
+
 oneSolitaireMove :: (Board,Board) -> IO (Board,Board)
 oneSolitaireMove (realB,shadB) =
   do putStrLn $ show shadB

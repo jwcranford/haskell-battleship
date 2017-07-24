@@ -1,4 +1,5 @@
 -- Battleship game
+-- module Battleship (Board, ) where
 module Battleship where
 
 import Data.Ix 
@@ -172,18 +173,12 @@ applyShotResults (cs,hit) shipsSunk (Board a t _ []) =
   let a' = a // [(cs,Vacant $ Just hit)]
   in Board a' t shipsSunk []
 
--- readCoord :: Board -> String -> Maybe BoardIx 
-readCoord b (c:d:_) = if inRange b (c,d)
-                      then Just (c,d)
-                      else Nothing
-readCoord _ _ = Nothing
-
 
 gameOver :: Board -> Bool
 gameOver (Board _ tot sunk _) = tot == sunk
   
 -- fmap with args reversed. <&> has the same relationship to <$> as & has to $  
-infixl 5 <&>
-(<&>) :: (Functor f) => f a -> (a -> b) -> f b
-(<&>) = flip fmap
+-- infixl 5 <&>
+-- (<&>) :: (Functor f) => f a -> (a -> b) -> f b
+-- (<&>) = flip fmap
 
