@@ -32,7 +32,7 @@ executable hbattleship-solitaire
   build-depends:       base >= 4.7 && < 5, 
                        random,
                        array
-  other-modules:       Battleship, Ship
+  other-modules:       Battleship, Ship, Cell
 
 Test-Suite hbattleship-test
   type:                exitcode-stdio-1.0
@@ -43,4 +43,4 @@ Test-Suite hbattleship-test
                        HUnit, 
                        random, 
                        array 
-  other-modules:       Battleship, Ship
+  other-modules:       Battleship, Ship, Cell
