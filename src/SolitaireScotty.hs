@@ -1,13 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-import Data.IORef
-import Control.Monad.Trans
-import GHC.Generics
-import Web.Scotty
+import Data.IORef (newIORef, atomicModifyIORef')
+import Control.Monad.Trans (lift, liftIO)
+import GHC.Generics (Generic)
+import Web.Scotty (scotty, post, json)
 import Data.Aeson (ToJSON)
-import Battleship
-
+import Battleship (Board, createValidStandardRandomBoard)
+-- import Data.Map
 
 data Game = Game { handle :: Int, board :: Board } deriving Generic
 
