@@ -1,12 +1,16 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Cell where
 
 import Control.Monad
 import Ship
+import GHC.Generics
+import Data.Aeson (ToJSON)
 
 data Cell = Vacant (Maybe Bool) 
         | Occupied Ship Bool 
         | Collision Ship Ship
-        deriving Eq
+        deriving (Eq, Generic)
 
 instance Show Cell where
     show (Vacant Nothing)      = "."
@@ -27,6 +31,8 @@ instance Monoid Cell where
     mappend (Occupied s1 _) (Occupied s2 _) = Collision s1 s2
     mappend c@(Collision _ _) _ = c
     mappend _ c@(Collision _ _) = c
+
+instance ToJSON Cell
 
 -- simple predicate for whether a cell is a collision or not
 collision :: Cell -> Bool

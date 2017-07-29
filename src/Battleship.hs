@@ -4,6 +4,7 @@
 module Battleship (Board(..)
   , Ship(..)
   , Cell(..)
+  , BoardIx
   , shoot
   , applyShotResults
   , gameOver
@@ -14,16 +15,22 @@ module Battleship (Board(..)
   , collisions
   ) where
 
-import GHC.Generics
+import GHC.Generics (Generic)
 import Data.Array
 import Ship
 import Cell
+import Data.Aeson (ToJSON, toJSON, toEncoding, foldable)
 
 data Board = Board { board :: Array BoardIx Cell
                     , shipTotal :: Int
                     , shipsSunk :: Int
                     , ships :: [Ship] } deriving Generic
 
+instance (ToJSON a) => ToJSON (Array i a) where
+  toJSON arr = toJSON $ elems arr
+  toEncoding arr = foldable arr
+
+instance ToJSON Board
                     
 -- takes a row index and the bounds of an 2-dimensional array and returns all the 
 -- indices for the given row

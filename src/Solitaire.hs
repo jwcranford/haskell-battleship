@@ -4,6 +4,7 @@ import Battleship
 import Data.Array
 import System.IO
 
+readCoord :: (BoardIx, BoardIx) -> [Char] -> Maybe BoardIx 
 readCoord b (c:d:_) = if inRange b (c,d)
                       then Just (c,d)
                       else Nothing
@@ -32,6 +33,7 @@ solitaireLoop args@(_,sb) =
   else oneSolitaireMove args 
        >>= solitaireLoop
 
+firstSolMove :: Board -> IO (Board, Board)
 firstSolMove rb =
   let shadB = emptyBoard standardBoardSize 5
   in oneSolitaireMove (rb,shadB)
@@ -42,5 +44,6 @@ solitaire =
   >>= firstSolMove
   >>= solitaireLoop
 
+main :: IO ()
 main = solitaire >>= putStrLn . show
 

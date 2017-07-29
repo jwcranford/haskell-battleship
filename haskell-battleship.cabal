@@ -13,17 +13,20 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
--- executable hbattleship-sol-scotty
---   hs-source-dirs:      src
---   main-is:             SolitaireScotty.hs
---  ghc-options:    -Wall -threaded -O2 -rtsopts -with-rtsopts=-N
---  extensions:     OverloadedStrings
---  default-language:    Haskell2010
---  build-depends:       base >= 4.7 && < 5, 
---                       random,
---                       array,
---                       containers
---  other-modules:       Battleship
+executable hbattleship-sol-scotty
+ hs-source-dirs:      src
+ main-is:             SolitaireScotty.hs
+ ghc-options:    -Wall -threaded -O2 -rtsopts -with-rtsopts=-N
+ other-extensions:     OverloadedStrings
+ default-language:    Haskell2010
+ build-depends:       base >= 4.7 && < 5, 
+                      random,
+                      array,
+                      containers,
+                      scotty,
+                      aeson >= 0.10,
+                      mtl
+ other-modules:       Battleship, Ship, Cell
 
 executable hbattleship-solitaire
   hs-source-dirs:      src
@@ -31,7 +34,8 @@ executable hbattleship-solitaire
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5, 
                        random,
-                       array
+                       array,
+                       aeson >= 0.10
   other-modules:       Battleship, Ship, Cell
 
 Test-Suite hbattleship-test
@@ -42,5 +46,6 @@ Test-Suite hbattleship-test
   build-depends:       base >= 4.7 && < 5, 
                        HUnit, 
                        random, 
-                       array 
+                       array,
+                       aeson >= 0.10
   other-modules:       Battleship, Ship, Cell

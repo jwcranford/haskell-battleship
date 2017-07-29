@@ -1,11 +1,17 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Ship where
 
 import Data.Ix 
 import System.Random
+import GHC.Generics
+import Data.Aeson (ToJSON)
 
 type BoardIx = (Char,Char)
 
-data Ship = Ship { shipType:: String, numHits:: Int, coords:: [BoardIx] } deriving (Show, Eq)
+data Ship = Ship { shipType:: String, numHits:: Int, coords:: [BoardIx] } deriving (Show, Eq, Generic)
+
+instance ToJSON Ship
 
 data Orientation = Vert | Horiz deriving (Enum, Show)
 
