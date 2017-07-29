@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 -- Battleship game
 module Battleship (Board(..)
   , Ship(..)
@@ -12,6 +14,7 @@ module Battleship (Board(..)
   , collisions
   ) where
 
+import GHC.Generics
 import Data.Array
 import Ship
 import Cell
@@ -19,7 +22,7 @@ import Cell
 data Board = Board { board :: Array BoardIx Cell
                     , shipTotal :: Int
                     , shipsSunk :: Int
-                    , ships :: [Ship] } 
+                    , ships :: [Ship] } deriving Generic
 
                     
 -- takes a row index and the bounds of an 2-dimensional array and returns all the 
