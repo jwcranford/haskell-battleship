@@ -22,8 +22,9 @@ executable hbattleship-sol-scotty
  build-depends:       base >= 4.7 && < 5, 
                       random,
                       array,
-                      containers,
+                      containers >= 0.5.8,
                       scotty,
+                      http-types,
                       aeson >= 0.10,
                       mtl
  other-modules:       Battleship, Ship, Cell
