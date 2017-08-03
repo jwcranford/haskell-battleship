@@ -7,7 +7,7 @@ import GHC.Generics (Generic)
 import Web.Scotty (scotty, post, json)
 import Data.Aeson (ToJSON)
 import Battleship (Board, createValidStandardRandomBoard)
--- import Data.Map
+import Data.Sequence (empty, (|>), )
 
 data Game = Game { handle :: Int, board :: Board } deriving Generic
 
@@ -16,10 +16,10 @@ instance ToJSON Game
 
 main :: IO ()
 main = do 
- ref <- newIORef 0
+ ref <- newIORef empty
  scotty 3000 $ do
   post "/game" $ do
-    num <- liftIO $ atomicModifyIORef' ref $ \i -> (i+1,i+1)
     b <- lift $ createValidStandardRandomBoard
-    json $ Game num b
+    len <- liftIO $ atomicModifyIORef' ref $ \s -> (s |> b, length s)
+    json $ Game len b
  
