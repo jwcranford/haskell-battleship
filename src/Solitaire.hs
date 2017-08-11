@@ -35,7 +35,7 @@ solitaireLoop args@(_,sb) =
 
 firstSolMove :: Board -> IO (Board, Board)
 firstSolMove rb =
-  let shadB = emptyBoard standardBoardSize 5
+  let shadB = emptyBoard standardBoardSize $ length standardShips
   in oneSolitaireMove (rb,shadB)
  
 solitaire :: IO Board

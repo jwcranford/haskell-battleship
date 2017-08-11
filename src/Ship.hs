@@ -51,6 +51,9 @@ placeShipRandomly bnds (name, size) =
        p <- randomPlacement size bnds ori
        return $ createShip name size ori p
 
+standardShips :: [(String,Int)]
+standardShips = [("Destroyer",2), ("Cruiser",3), ("Submarine",3), ("Battleship",4), ("Carrier",5)]
+
 placeStandardShipsRandomly :: IO [Ship]
 placeStandardShipsRandomly = 
-    sequence $ map (placeShipRandomly standardBoardSize) [("Destroyer",2), ("Cruiser",3), ("Submarine",3), ("Battleship",4), ("Carrier",5)]
+    sequence $ map (placeShipRandomly standardBoardSize) standardShips

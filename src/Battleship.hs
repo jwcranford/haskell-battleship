@@ -11,6 +11,7 @@ module Battleship (Board(..)
   , emptyBoard
   , createBoard
   , standardBoardSize
+  , standardShips
   , createValidStandardRandomBoard
   , collisions
   ) where
