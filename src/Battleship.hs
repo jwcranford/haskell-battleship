@@ -9,20 +9,25 @@ module Battleship (Board(..)
   , applyShotResults
   , gameOver
   , createBoard
+  , createBoard'
   , emptyStandardBoard
   , createValidStandardRandomBoard
   , collisions
+  , sunk
   ) where
+
+import Ship
+import Cell
 
 import GHC.Generics (Generic)
 import Data.Array
-import Ship
-import Cell
+
 import Data.Aeson (ToJSON, toJSON, toEncoding, foldable)
 
+----------------------------------------------------------------------
 data Board = Board { board :: Array BoardIx Cell
                     , shipTotal :: Int
-                    , shipsSunk :: Int
+                    , shipsSunk :: [String]
                     , ships :: [Ship] } deriving Generic
 
 instance (ToJSON a) => ToJSON (Array i a) where
@@ -34,8 +39,8 @@ instance ToJSON Board
 -- takes a row index and the bounds of an 2-dimensional array and returns all the 
 -- indices for the given row
 rowIndices2D :: (Ix a,Ix b) => a -> ((a,b),(a,b)) -> [(a,b)]
-rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))                    
-            
+rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))
+
 -- shows the given row of the array 
 showsRowPrec :: (Ix b, Show a) =>
                       Int -> Char -> Array (Char, b) a -> String -> [Char]
@@ -48,19 +53,24 @@ instance Show Board where
         let a = board b
             ((minx,_),(maxx,_)) = bounds a
             ssunk = shipsSunk b
-        in \so -> 
-          let tl = shows ssunk (" ships sunk\n" ++ so)
+        in \so ->
+          let tl = shows (length ssunk) (" ships sunk: " ++ show ssunk ++ '\n':so)
           in foldr (\row s -> showsRowPrec p row a ('\n':s)) tl [minx..maxx]
 
-        
-createBoard :: (BoardIx,BoardIx) -> [Ship] -> Board
-createBoard bs ss = 
-    let assoc = [(cs, Occupied ship False) | ship <- ss, cs <- coords ship]
-    in Board { board = accumArray mappend mempty bs assoc,
-               shipTotal = length ss,
-               shipsSunk = 0,
-               ships = ss }
 
+-- used for testing
+createBoard' :: Bool -> (BoardIx,BoardIx) -> [Ship] -> Board
+createBoard' isSunk bs ss =
+  let assoc = [(cs, Occupied ship isSunk) | ship <- ss, cs <- coords ship]
+  in Board { board = accumArray mappend mempty bs assoc,
+             shipTotal = length ss,
+             shipsSunk = if isSunk then map shipType ss else [],
+             ships = ss }
+
+
+createBoard :: (BoardIx,BoardIx) -> [Ship] -> Board
+createBoard = createBoard' False
+    
 emptyBoard :: (BoardIx, BoardIx) -> Int -> Board
 emptyBoard bs numShips = 
   (createBoard bs []) { shipTotal = numShips }
@@ -86,9 +96,6 @@ createValidStandardRandomBoard =
        else createValidStandardRandomBoard
 
 
--- mapCell :: Ix i => i -> (a -> a) -> Array i a -> Array i a
--- mapCell i f a = a // [(i, f (a ! i))]
-
 sunk :: Ship -> Array BoardIx Cell -> Bool
 sunk s a =
   let cells = map (a !) $ coords s
@@ -96,6 +103,7 @@ sunk s a =
   in and statii
  where hit (Occupied _ b) = b 
        hit _ = False
+
 
 shoot ::  BoardIx -> Board -> (Bool,Board)
 shoot cs b@(Board a total ssunk ss) =
@@ -107,20 +115,20 @@ shoot cs b@(Board a total ssunk ss) =
   (Occupied ship False) -> 
     let a' = a // [(cs, Occupied ship True)]
     in if sunk ship a'
-       then (True, Board a' total (ssunk + 1) ss)
+       then (True, Board a' total ((shipType ship) : ssunk) ss)
        else (True, Board a' total ssunk ss)
   _ -> error (showString "Found a colliding cell in shoot: " $ show (a ! cs))
 
 
 -- apply this to a vacant board
-applyShotResults :: (BoardIx,Bool) -> Int -> Board -> Board
+applyShotResults :: (BoardIx,Bool) -> [String] -> Board -> Board
 applyShotResults (cs,hit) ssunk (Board a t _ ss) =
   let a' = a // [(cs,Vacant $ Just hit)]
   in Board a' t ssunk ss
 
 
 gameOver :: Board -> Bool
-gameOver (Board _ tot ssunk _) = tot == ssunk
+gameOver (Board _ tot ssunk _) = tot == (length ssunk)
   
 -- fmap with args reversed. <&> has the same relationship to <$> as & has to $  
 -- infixl 5 <&>
