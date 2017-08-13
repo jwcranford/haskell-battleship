@@ -8,10 +8,8 @@ module Battleship (Board(..)
   , shoot
   , applyShotResults
   , gameOver
-  , emptyBoard
   , createBoard
-  , standardBoardSize
-  , standardShips
+  , emptyStandardBoard
   , createValidStandardRandomBoard
   , collisions
   ) where
@@ -66,6 +64,10 @@ createBoard bs ss =
 emptyBoard :: (BoardIx, BoardIx) -> Int -> Board
 emptyBoard bs numShips = 
   (createBoard bs []) { shipTotal = numShips }
+
+emptyStandardBoard :: Board
+emptyStandardBoard =
+  emptyBoard standardBoardSize $ length standardShips
 
 createStandardBoard :: [Ship] -> Board
 createStandardBoard = createBoard standardBoardSize
