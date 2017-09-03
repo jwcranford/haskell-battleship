@@ -23,11 +23,10 @@ createShip name size Vert begin@(x,y) =
   let x' = toEnum $ (fromEnum x) + size - 1
   in Ship name size $ range (begin, (x',y))
 
-orientationFromInt :: Int -> Orientation
-orientationFromInt x = toEnum $ x `mod` 2
-
 randomOrientation :: IO Orientation
-randomOrientation = do i <- getStdRandom random; return $ orientationFromInt i
+randomOrientation = do
+  i <- randomRIO (0,1)
+  return $ toEnum i
 
 standardBoardSize :: (BoardIx,BoardIx)
 standardBoardSize = (('a','0'), ('j','9'))
