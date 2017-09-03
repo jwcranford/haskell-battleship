@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveGeneric #-}
 
-import Battleship (Board,
+import Battleship (Board, BoardIx,
                    createValidStandardRandomBoard,
                    emptyStandardBoard, shoot, applyShotResults, shipsSunk)
 
@@ -43,6 +43,11 @@ newGame = let s = emptyStandardBoard in do
   b <- createValidStandardRandomBoard
   return $ InternalGame (Game i s) b
 
+applyShot :: BoardIx -> InternalGame -> InternalGame
+applyShot cs (InternalGame game@(Game i sb) rb) = 
+  let (hit, rb') = shoot cs rb
+      sb' = applyShotResults (cs, hit) (shipsSunk rb') sb
+  in InternalGame (Game i sb') rb'
 
 main :: IO ()
 main = do 
@@ -67,14 +72,12 @@ main = do
     gs <- liftIO $ readIORef ref
     let migame = Map.lookup i gs
     case migame of
-      Just (InternalGame game rb) ->
-        let (hit, rb') = shoot (r,c) rb
-            sb' = applyShotResults ((r,c), hit) (shipsSunk rb') (board game)
-            game' = Game i sb'
-            ig' = InternalGame game' rb'
+      Just ig ->
         -- update game
+        let ig'@(InternalGame g _) = applyShot (r,c) ig
+            updateGame gs2 = (Map.insert i ig' gs2, ())
         in do
-          liftIO $ atomicModifyIORef' ref $ \gs2 -> (Map.insert i ig' gs2, ())
-          json game'
+          liftIO $ atomicModifyIORef' ref $ updateGame
+          json g
       Nothing   -> status notFound404
     
