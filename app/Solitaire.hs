@@ -6,8 +6,17 @@ import Data.Char (digitToInt)
 import System.IO
 
 -- converts "a9" to Just (0,9)
+-- readCoord :: (BoardIx, BoardIx) -> [Char] -> Maybe BoardIx 
+-- readCoord b (c:d:_) = let ci = fromEnum c - fromEnum 'a'
+--                           di = digitToInt d
+--                       in if inRange b (ci,di)
+--                          then Just (ci,di)
+--                          else Nothing
+-- readCoord _ _ = Nothing
+
+-- converts "10" to Just (1,0)
 readCoord :: (BoardIx, BoardIx) -> [Char] -> Maybe BoardIx 
-readCoord b (c:d:_) = let ci = fromEnum c - fromEnum 'a'
+readCoord b (c:d:_) = let ci = digitToInt c
                           di = digitToInt d
                       in if inRange b (ci,di)
                          then Just (ci,di)
