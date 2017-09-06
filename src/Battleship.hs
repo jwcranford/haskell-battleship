@@ -36,17 +36,17 @@ instance (ToJSON a) => ToJSON (Array i a) where
 
 instance ToJSON Board
                     
--- takes a row index and the bounds of an 2-dimensional array and returns all the 
--- indices for the given row
+-- takes a row index and the bounds of an 2-dimensional array and
+-- returns all the indices for the given row
 rowIndices2D :: (Ix a,Ix b) => a -> ((a,b),(a,b)) -> [(a,b)]
 rowIndices2D i ((_,miny),(_,maxy)) = range ((i,miny),(i,maxy))
 
 -- shows the given row of the array 
-showsRowPrec :: (Ix b, Show a) =>
-                      Int -> Char -> Array (Char, b) a -> String -> [Char]
+showsRowPrec :: (Ix b, Show a, Ix c, Show c) =>
+                      Int -> c -> Array (c, b) a -> String -> [Char]
 showsRowPrec prec row a = 
     let cs = rowIndices2D row (bounds a)
-    in \s -> row : foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s cs
+    in \s -> show row ++ foldr (\i s1 -> ' ':(showsPrec prec (a!i) s1)) s cs
 
 instance Show Board where
     showsPrec p b = 

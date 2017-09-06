@@ -2,12 +2,16 @@ module Main where
 
 import Battleship
 import Data.Array
+import Data.Char (digitToInt)
 import System.IO
 
+-- converts "a9" to Just (0,9)
 readCoord :: (BoardIx, BoardIx) -> [Char] -> Maybe BoardIx 
-readCoord b (c:d:_) = if inRange b (c,d)
-                      then Just (c,d)
-                      else Nothing
+readCoord b (c:d:_) = let ci = fromEnum c - fromEnum 'a'
+                          di = digitToInt d
+                      in if inRange b (ci,di)
+                         then Just (ci,di)
+                         else Nothing
 readCoord _ _ = Nothing
 
 

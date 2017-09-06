@@ -7,7 +7,7 @@ import System.Random
 import GHC.Generics
 import Data.Aeson (ToJSON)
 
-type BoardIx = (Char,Char)
+type BoardIx = (Int,Int)
 
 data Ship = Ship { shipType:: String, numHits:: Int, coords:: [BoardIx] } deriving (Show, Eq, Generic)
 
@@ -29,7 +29,7 @@ randomOrientation = do
   return $ toEnum i
 
 standardBoardSize :: (BoardIx,BoardIx)
-standardBoardSize = (('a','0'), ('j','9'))
+standardBoardSize = ((0,0), (9,9))
 
 randomPlacement :: Int -> (BoardIx,BoardIx) -> Orientation -> IO BoardIx
 randomPlacement size ((minx,miny),(maxx, maxy)) Horiz = 

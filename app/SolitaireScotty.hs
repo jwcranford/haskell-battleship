@@ -37,17 +37,20 @@ instance ToJSON Game
 -- with ships on it.
 data InternalGame = InternalGame Game Board
 
+
 newGame :: IO InternalGame
 newGame = let s = emptyStandardBoard in do
   i <- randomRIO (0,100000)
   b <- createValidStandardRandomBoard
   return $ InternalGame (Game i s) b
 
+
 applyShot :: BoardIx -> InternalGame -> InternalGame
 applyShot cs (InternalGame game@(Game i sb) rb) = 
   let (hit, rb') = shoot cs rb
       sb' = applyShotResults (cs, hit) (shipsSunk rb') sb
   in InternalGame (Game i sb') rb'
+
 
 main :: IO ()
 main = do 
@@ -68,7 +71,6 @@ main = do
     i <- param "id"
     r <- param "row"
     c <- param "column"
---    liftIO $ print (r,c)
     gs <- liftIO $ readIORef ref
     let migame = Map.lookup i gs
     case migame of
