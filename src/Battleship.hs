@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 -- Battleship game
 module Battleship (Board(..)
@@ -19,23 +20,38 @@ module Battleship (Board(..)
 import Ship
 import Cell
 
-import GHC.Generics (Generic)
 import Data.Array
 
-import Data.Aeson (ToJSON, toJSON, toEncoding, foldable)
+import Data.Aeson (ToJSON, toJSON, object, (.=))
 
 ----------------------------------------------------------------------
 data Board = Board { board :: Array BoardIx Cell
                     , shipTotal :: Int
                     , shipsSunk :: [String]
-                    , ships :: [Ship] } deriving Generic
+                    , ships :: [Ship] }
 
-instance (ToJSON a) => ToJSON (Array i a) where
-  toJSON arr = toJSON $ elems arr
-  toEncoding arr = foldable arr
 
-instance ToJSON Board
-                    
+instance ToJSON Board where
+  toJSON (Board arr shipTot ssunk ss) =
+    let arrb = (elems arr) `partitionInto` (rowLength $ bounds arr)
+    in object ["board" .= arrb
+               , "shipTotal" .= shipTot
+               , "shipsSunk" .= ssunk
+               , "ships" .= ss]
+
+
+-- rowLength takes the bounds of a 2D array and returns the length of a row
+rowLength :: (Ix a) => ((a,b),(a,b)) -> Int
+rowLength ((minr,_), (maxr,_)) = rangeSize (minr,maxr)
+
+-- chops up a list into sublists of the given length
+partitionInto :: [a] -> Int -> [[a]]
+xs `partitionInto` n = npartition [] xs
+  where npartition acc xs' = if null xs'
+                              then reverse acc
+                              else let (first, rest) = splitAt n xs'
+                                   in npartition (first:acc) rest
+         
 -- takes a row index and the bounds of an 2-dimensional array and
 -- returns all the indices for the given row
 rowIndices2D :: (Ix a,Ix b) => a -> ((a,b),(a,b)) -> [(a,b)]
