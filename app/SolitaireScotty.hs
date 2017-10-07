@@ -15,7 +15,8 @@ import GHC.Generics (Generic)
 import Control.Monad.Trans (liftIO)
 
 -- scotty
-import Web.Scotty (scotty, post, put, get, param, json, status)
+import Web.Scotty (scotty, post, put, get, param, json, status
+                  , setHeader, file)
 import Network.HTTP.Types.Status (notFound404)
 
 -- aeson
@@ -82,4 +83,6 @@ main = do
           liftIO $ atomicModifyIORef' ref $ updateGame
           json g
       Nothing   -> status notFound404
-    
+  get "/" $ do
+    setHeader "Content-Type" "text/html";
+    file "app/index.html"
