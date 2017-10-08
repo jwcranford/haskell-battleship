@@ -7,32 +7,19 @@
     <table border=1>
       <tr>
 	<th></th>
-	<th></th>
-	<th></th>
-	<th></th>
-	<th></th>
-	<th></th>
-	<th></th>
-	<th></th>
-	<th></th>
-	<th></th>
-	<th></th>
+	<th> 1</th>
+	<th> 2</th>
+	<th> 3</th>
+	<th> 4</th>
+	<th> 5</th>
+	<th> 6</th>
+	<th> 7</th>
+	<th> 8</th>
+	<th> 9</th>
+	<th>10</th>
       </tr>
       <tr>
-	<th></th>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-      </tr>
-      <tr>
-	<th></th>
+	<th>A</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -45,7 +32,7 @@
 	<td></td>
       </tr>
       <tr>
-	<th></th>
+	<th>B</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -58,7 +45,7 @@
 	<td></td>
       </tr>
       <tr>
-	<th></th>
+	<th>C</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -71,7 +58,7 @@
 	<td></td>
       </tr>
       <tr>
-	<th></th>
+	<th>D</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -84,7 +71,7 @@
 	<td></td>
       </tr>
       <tr>
-	<th></th>
+	<th>E</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -97,7 +84,7 @@
 	<td></td>
       </tr>
       <tr>
-	<th></th>
+	<th>F</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -110,7 +97,7 @@
 	<td></td>
       </tr>
       <tr>
-	<th></th>
+	<th>G</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -123,7 +110,7 @@
 	<td></td>
       </tr>
       <tr>
-	<th></th>
+	<th>H</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -136,7 +123,20 @@
 	<td></td>
       </tr>
       <tr>
-	<th></th>
+	<th>I</th>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+	<td></td>
+      </tr>
+      <tr>
+	<th>J</th>
 	<td></td>
 	<td></td>
 	<td></td>
@@ -154,22 +154,44 @@
       integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
       crossorigin="anonymous"></script>
     <script>
-    var handle;
+    var gGame;
 
     function cell2String(obj) {
-	if (!obj.tag)                   { return ""; }
-	if (obj.tag !== "Vacant")       { return "?"; }
-	if (obj.contents === null)      { return ""; }
-	else if (obj.contents === true) { return "X"; }
-	else                            { return "O"; }
+	if (!obj.tag || obj.tag !== "Vacant")       { return "?"; }
+	if (obj.contents === null) {
+	    return "<input type=checkbox>";
+	}
+	else if (obj.contents === true) {
+	    return "<input type=checkbox value=checked disabled>";
+	} else {
+	    return "<input type=checkbox disabled>";
+	}
     }
 
     function newGamePromise() {
     	return $.post("/game");
     }
 
+
+    function refreshRow(row, rowIndex) {
+	//console.log("row", rowIndex, "=", JSON.stringify(row));
+	var refreshCell = function(cell, colIndex) {
+	    console.log("cell [" + rowIndex + "," + colIndex + "] =",
+	    		JSON.stringify(cell));
+	    $($("table tbody tr")[rowIndex + 1].children[colIndex + 1])
+		.html(cell2String(cell));
+	};
+	row.forEach(refreshCell);
+    }
+
     function refreshGame(game) {
-	console.log(JSON.stringify(game));
+	gGame = game;
+	if (game && game.board && game.board.board) {
+//	    console.log(JSON.stringify(game.board.board));
+	    game.board.board.forEach(refreshRow);
+	} else {
+	    console.log("unexpected: " + JSON.stringify(game));
+	}
     }
 
     function xhrFail(xhr, status, errorThrown ) {
