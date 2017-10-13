@@ -255,6 +255,10 @@
 		  aria-hidden="true" onclick='shoot(9,9)'></td>
       </tr>
     </table>
+    <br>
+    <div>Total Ships: <span id="shipTotal"></span></div>
+    <div>Ships sunk: <span id="shipsSunk">None</span></div>
+    <div id="gameOver" class="hide">Game Over!</div>
     <script
       src="https://code.jquery.com/jquery-3.2.1.js"
       integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
@@ -312,11 +316,16 @@ function refreshRow(row, rowIndex) {
 
 function refreshGame(game) {
     if (game && game.board && game.board.board) {
-	//	    console.log(JSON.stringify(game.board.board));
+//	console.log(JSON.stringify(game.board));
 	gGame = game;
 	game.board.board.forEach(refreshRow);
     } else {
 	console.log("unexpected: " + JSON.stringify(game));
+    }
+    $('#shipsSunk').html(game.board.shipsSunk.join(', '));
+    $('#shipTotal').html(game.board.shipTotal);
+    if (game.board.shipsSunk.length === game.board.shipTotal) {
+	$('#gameOver')[0].className = 'show';
     }
 }
 
